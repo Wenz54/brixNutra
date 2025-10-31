@@ -1,0 +1,91 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backend (Strapi)
+backend/strapi/.tmp/
+backend/strapi/build/
+backend/strapi/.cache/
+backend/strapi/public/uploads/
+backend/strapi/.strapi-updater.json
+backend/strapi/exports/
+backend/strapi/.env
+
+# Flutter
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+mobile/.fvm/
+
+# Flutter Generated Files
+mobile/ios/Runner/GeneratedPluginRegistrant.*
+mobile/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+mobile/android/local.properties
+mobile/android/.gradle/
+mobile/android/captures/
+mobile/android/gradle-wrapper.jar
+mobile/android/.idea/
+
+# Key Store
+*.jks
+*.keystore
+mobile/android/key.properties
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Documentation build
+docs/_build/
+
+# Admin Web Panel (Next.js)
+admin/.next/
+admin/out/
+admin/build/
+admin/dist/
+admin/.env*.local
+admin/.vercel
+admin/.turbo
+

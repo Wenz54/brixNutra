@@ -1,0 +1,193 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: brix_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: brix_nutrition
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - brix_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: brix_redis
+    restart: unless-stopped
+    ports:
+      - "7000:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - brix_network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Strapi Backend (после создания strapi проекта)
+  # Раскомментировать после создания backend/strapi
+  # strapi:
+  #   build: 
+  #     context: ./backend/strapi
+  #     dockerfile: Dockerfile
+  #   container_name: brix_strapi
+  #   restart: unless-stopped
+  #   environment:
+  #     # Database
+  #     DATABASE_CLIENT: postgres
+  #     DATABASE_HOST: postgres
+  #     DATABASE_PORT: 5432
+  #     DATABASE_NAME: brix_nutrition
+  #     DATABASE_USERNAME: postgres
+  #     DATABASE_PASSWORD: postgres
+  #     DATABASE_SSL: false
+  #     
+  #     # Redis
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #     
+  #     # JWT
+  #     JWT_SECRET: ${JWT_SECRET}
+  #     API_TOKEN_SALT: ${API_TOKEN_SALT}
+  #     ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
+  #     
+  #     # OpenAI
+  #     OPENAI_API_KEY: ${OPENAI_API_KEY}
+  #     
+  #     # Twilio
+  #     TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+  #     TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+  #     TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+  #     
+  #     # Stripe
+  #     STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+  #     STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+  #     
+  #     # AWS S3
+  #     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+  #     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+  #     AWS_REGION: ${AWS_REGION}
+  #     AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+  #     
+  #     # Email
+  #     SMTP_HOST: ${SMTP_HOST}
+  #     SMTP_PORT: ${SMTP_PORT}
+  #     SMTP_USER: ${SMTP_USER}
+  #     SMTP_PASS: ${SMTP_PASS}
+  #     
+  #     # App
+  #     HOST: 0.0.0.0
+  #     PORT: 1337
+  #     NODE_ENV: development
+  #   ports:
+  #     - "1337:1337"
+  #   volumes:
+  #     - ./backend/strapi:/app
+  #     - /app/node_modules
+  #     - strapi_uploads:/app/public/uploads
+  #   networks:
+  #     - brix_network
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+
+  # Next.js Admin Panel (после создания admin проекта)
+  # Раскомментировать после создания admin/
+  # admin:
+  #   build:
+  #     context: ./admin
+  #     dockerfile: Dockerfile.dev
+  #   container_name: brix_admin
+  #   restart: unless-stopped
+  #   environment:
+  #     # API URL
+  #     NEXT_PUBLIC_API_URL: http://strapi:1337/api
+  #     # Node
+  #     NODE_ENV: development
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./admin:/app
+  #     - /app/node_modules
+  #     - /app/.next
+  #   networks:
+  #     - brix_network
+  #   depends_on:
+  #     - strapi
+  #   command: npm run dev
+
+  # PgAdmin (для управления PostgreSQL через UI)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: brix_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@brix-nutrition.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - brix_network
+    depends_on:
+      - postgres
+
+  # Redis Commander (для управления Redis через UI)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: brix_redis_commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    networks:
+      - brix_network
+    depends_on:
+      - redis
+
+  # Mailhog (для тестирования email отправки)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: brix_mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    networks:
+      - brix_network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  strapi_uploads:
+    driver: local
+
+networks:
+  brix_network:
+    driver: bridge
+

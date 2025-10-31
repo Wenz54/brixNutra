@@ -1,0 +1,76 @@
+# ============================================
+# Brix Nutrition Backend - Environment Variables
+# ============================================
+# Скопируйте этот файл как .env и при необходимости измените значения
+
+# ============================================
+# DATABASE (PostgreSQL через Docker)
+# ============================================
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/brix_nutrition
+
+# ============================================
+# REDIS (через Docker)
+# ============================================
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# ============================================
+# JWT SECRETS (минимум 32 символа!)
+# ============================================
+# Для production сгенерируйте новые через: openssl rand -base64 48
+JWT_SECRET=7uiVFKYPhlo15NxEsf2C0XjacrZz6ByQkAenUH9Ob3SRpLdJ
+JWT_REFRESH_SECRET=3y28mPzM1srw5KZThBXSefja9EqoVgGFkDlv7buctOHYU0iL
+
+# ============================================
+# OPENAI (для AI Chat) ✅
+# ============================================
+OPENAI_API_KEY=your-openai-api-key-here
+
+# ============================================
+# SMS/EMAIL - MOCK MODE для разработки
+# ============================================
+USE_MOCK_SMS=true
+USE_MOCK_EMAIL=true
+
+# Twilio (для production раскомментируйте):
+# TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# TWILIO_AUTH_TOKEN=your-twilio-auth-token
+# TWILIO_PHONE_NUMBER=+1234567890
+
+# ============================================
+# APP SETTINGS
+# ============================================
+NODE_ENV=development
+PORT=3000
+HOST=0.0.0.0
+
+# ============================================
+# FRONTEND URL (для CORS)
+# ============================================
+FRONTEND_URL=http://localhost:3001
+
+# ============================================
+# STRIPE (опционально - для платежей)
+# ============================================
+# STRIPE_SECRET_KEY=sk_test_your-stripe-test-key
+# STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret
+
+# ============================================
+# AWS S3 (опционально - для загрузки файлов)
+# ============================================
+# AWS_ACCESS_KEY_ID=your-aws-access-key
+# AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+# AWS_REGION=us-east-1
+# AWS_S3_BUCKET=brix-nutrition-uploads
+
+# ============================================
+# RATE LIMITING
+# ============================================
+RATE_LIMIT_MAX=100
+RATE_LIMIT_TIMEWINDOW=60000
+
+# ============================================
+# LOGS
+# ============================================
+LOG_LEVEL=info
+

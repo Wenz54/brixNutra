@@ -1,0 +1,2111 @@
+openapi: 3.0.3
+info:
+  title: Brix Nutritional App API
+  version: 2.0.0
+  description: |
+    REST API для Brix Nutritional App (Mobile + Admin Web Panel).
+    
+    ## Компоненты системы
+    
+    ### 1. Mobile App (Flutter)
+    Мобильное приложение для пользователей (iOS/Android).
+    Использует все endpoints из категорий: Auth, Users, Home, Meal Plans, Recipes, Diary, AI Chat, Lab Tests, Courses, Blog, Notifications, Subscriptions.
+    
+    ### 2. Admin Web Panel (Next.js)
+    Веб-панель для администраторов и контент-менеджеров.
+    Использует admin-специфичные endpoints и endpoints для управления контентом (Courses, Lessons, Recipes, Meal Plans, Users, Blog, Subscriptions, Analytics).
+    
+    ### 3. Backend API (Strapi)
+    Сервер на Node.js + Strapi CMS с кастомными контроллерами.
+    
+    ---
+    
+    ## Авторизация
+    
+    ### Для Mobile App:
+    Большинство endpoints требуют JWT токен в заголовке:
+    ```
+    Authorization: Bearer <token>
+    ```
+    
+    ### Для Admin Web Panel:
+    Admin endpoints требуют Strapi admin JWT токен:
+    ```
+    Authorization: Bearer <admin-token>
+    ```
+    Токен получается через Strapi `/admin/login` endpoint.
+    
+    ---
+    
+    ## Rate Limiting
+    - Auth endpoints: 5 запросов / 15 минут
+    - Mobile App endpoints: 100 запросов / минуту
+    - Admin endpoints: 1000 запросов / минуту
+    
+  contact:
+    name: API Support
+    email: support@brix-nutrition.com
+
+servers:
+  - url: http://localhost:1337/api
+    description: Development
+  - url: https://api.brix-nutrition.com/api
+    description: Production
+
+tags:
+  - name: Auth
+    description: Авторизация и регистрация (Mobile)
+  - name: Users
+    description: Управление профилем (Mobile + Admin)
+  - name: Onboarding
+    description: Первичная настройка (Mobile)
+  - name: Home
+    description: Главный экран (Mobile)
+  - name: Meal Plans
+    description: Планы питания (Mobile + Admin)
+  - name: Recipes
+    description: Рецепты (Mobile + Admin)
+  - name: Diary
+    description: Дневник питания (Mobile)
+  - name: AI Chat
+    description: AI консультант (Mobile)
+  - name: Lab Tests
+    description: Анализы (Mobile + Admin)
+  - name: Courses
+    description: Курсы и база знаний (Mobile + Admin)
+  - name: Blog
+    description: Блог (Mobile + Admin)
+  - name: Notifications
+    description: Уведомления (Mobile)
+  - name: Subscriptions
+    description: Подписки (Mobile + Admin)
+  - name: Admin
+    description: Админ-панель специфичные endpoints (Admin только)
+  - name: Analytics
+    description: Статистика и аналитика (Admin только)
+
+paths:
+  # ============= AUTH =============
+  /auth/email/send-code:
+    post:
+      tags: [Auth]
+      summary: Отправить код на email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+      responses:
+        '200':
+          description: Код отправлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /auth/email/verify-code:
+    post:
+      tags: [Auth]
+      summary: Проверить код из email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+                  minLength: 4
+                  maxLength: 4
+                  example: "1234"
+      responses:
+        '200':
+          description: Код верный
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  isNewUser:
+                    type: boolean
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  /auth/email/set-password:
+    post:
+      tags: [Auth]
+      summary: Установить пароль (только для новых пользователей)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                  example: "SecurePass123!"
+      responses:
+        '200':
+          description: Пароль установлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /auth/phone/send-code:
+    post:
+      tags: [Auth]
+      summary: Отправить SMS код
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone:
+                  type: string
+                  example: "+79090786765"
+      responses:
+        '200':
+          description: SMS отправлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /auth/phone/verify-code:
+    post:
+      tags: [Auth]
+      summary: Проверить SMS код
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, code]
+              properties:
+                phone:
+                  type: string
+                code:
+                  type: string
+                  minLength: 4
+                  maxLength: 4
+      responses:
+        '200':
+          description: Код верный
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Выход
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешный выход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Обновить токен
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Новый токен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  refreshToken:
+                    type: string
+
+  # ============= USERS =============
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Получить профиль
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Профиль пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    
+    put:
+      tags: [Users]
+      summary: Обновить профиль
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                birthDate:
+                  type: string
+                  format: date
+                goal:
+                  type: string
+                  enum: [weight_loss, weight_gain, maintenance, health]
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Профиль обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    
+    delete:
+      tags: [Users]
+      summary: Удалить аккаунт
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Аккаунт удален
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ============= ONBOARDING =============
+  /onboarding/complete:
+    post:
+      tags: [Onboarding]
+      summary: Завершить первичную настройку
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [goal, name, birthDate]
+              properties:
+                goal:
+                  type: string
+                  enum: [weight_loss, weight_gain, maintenance, health]
+                name:
+                  type: string
+                birthDate:
+                  type: string
+                  format: date
+                  example: "2000-08-08"
+      responses:
+        '200':
+          description: Онбординг завершен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ============= HOME =============
+  /home/dashboard:
+    get:
+      tags: [Home]
+      summary: Получить данные для главного экрана
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Данные главного экрана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+
+  # ============= MEAL PLANS =============
+  /meal-plan/current:
+    get:
+      tags: [Meal Plans]
+      summary: Получить текущий план питания
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Текущий план
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MealPlan'
+
+  /meal-plan/day/{date}:
+    get:
+      tags: [Meal Plans]
+      summary: Получить план на конкретный день
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2025-10-10"
+      responses:
+        '200':
+          description: План на день
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                  meals:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MealSlot'
+
+  /meal-plan/replace:
+    post:
+      tags: [Meal Plans]
+      summary: Заменить блюдо в плане
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mealSlotId, newRecipeId]
+              properties:
+                mealSlotId:
+                  type: string
+                  format: uuid
+                newRecipeId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Блюдо заменено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  updatedMeal:
+                    $ref: '#/components/schemas/MealSlot'
+
+  # ============= RECIPES =============
+  /recipes/{id}:
+    get:
+      tags: [Recipes]
+      summary: Получить рецепт
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Рецепт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+
+  /recipes/{id}/alternatives:
+    get:
+      tags: [Recipes]
+      summary: Получить альтернативные рецепты
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Альтернативы
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alternatives:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recipe'
+
+  /recipes/search:
+    get:
+      tags: [Recipes]
+      summary: Поиск рецептов
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+        - name: tags
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: maxCalories
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Результаты поиска
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recipes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recipe'
+                  total:
+                    type: integer
+
+  # ============= DIARY =============
+  /diary/day/{date}:
+    get:
+      tags: [Diary]
+      summary: Получить дневник за день
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Дневник
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiaryDay'
+
+  /diary/meal:
+    post:
+      tags: [Diary]
+      summary: Добавить прием пищи
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [mealName, mealType, consumedAt]
+              properties:
+                mealName:
+                  type: string
+                mealType:
+                  type: string
+                  enum: [breakfast, lunch, dinner, snack]
+                consumedAt:
+                  type: string
+                  format: date-time
+                portionGrams:
+                  type: integer
+                calories:
+                  type: integer
+                photo:
+                  type: string
+                  format: binary
+                fromPlan:
+                  type: boolean
+                recipeId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Прием пищи добавлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MealEntry'
+
+  /diary/meal/{id}:
+    delete:
+      tags: [Diary]
+      summary: Удалить прием пищи
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Удалено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /diary/water:
+    post:
+      tags: [Diary]
+      summary: Обновить количество воды
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, increment]
+              properties:
+                date:
+                  type: string
+                  format: date
+                increment:
+                  type: integer
+                  description: Изменение в мл (может быть отрицательным)
+                  example: 200
+      responses:
+        '200':
+          description: Вода обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaterLog'
+
+  /diary/mood:
+    put:
+      tags: [Diary]
+      summary: Обновить настроение
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, rating]
+              properties:
+                date:
+                  type: string
+                  format: date
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+      responses:
+        '200':
+          description: Настроение обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiaryDay'
+
+  /diary/day-status:
+    put:
+      tags: [Diary]
+      summary: Завершить день
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, isCompleted]
+              properties:
+                date:
+                  type: string
+                  format: date
+                isCompleted:
+                  type: boolean
+      responses:
+        '200':
+          description: Статус обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ============= AI CHAT =============
+  /ai/chat/message:
+    post:
+      tags: [AI Chat]
+      summary: Отправить сообщение AI
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                chatId:
+                  type: string
+                  format: uuid
+                  description: ID чата (если продолжение)
+                message:
+                  type: string
+                context:
+                  type: object
+                  properties:
+                    includeDiary:
+                      type: boolean
+                    includeLabTests:
+                      type: boolean
+                    includePlan:
+                      type: boolean
+      responses:
+        '200':
+          description: Ответ AI
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chatId:
+                    type: string
+                    format: uuid
+                  messageId:
+                    type: string
+                    format: uuid
+                  response:
+                    type: string
+                  sources:
+                    type: array
+                    items:
+                      type: string
+
+  /ai/chat/history:
+    get:
+      tags: [AI Chat]
+      summary: Получить историю чатов
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: История
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chats:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AIChat'
+
+  /ai/chat/{id}:
+    get:
+      tags: [AI Chat]
+      summary: Получить сообщения чата
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Сообщения
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chat:
+                    $ref: '#/components/schemas/AIChat'
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AIMessage'
+    
+    delete:
+      tags: [AI Chat]
+      summary: Удалить чат
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Удалено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ============= LAB TESTS =============
+  /lab-tests/upload:
+    post:
+      tags: [Lab Tests]
+      summary: Загрузить результаты анализов
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [testType, testDate, results]
+              properties:
+                testType:
+                  type: string
+                  example: "blood_general"
+                testDate:
+                  type: string
+                  format: date
+                results:
+                  type: array
+                  items:
+                    type: object
+                    required: [parameterId, value, unit]
+                    properties:
+                      parameterId:
+                        type: string
+                        example: "HGB"
+                      value:
+                        type: number
+                        example: 128
+                      unit:
+                        type: string
+                        example: "г/л"
+      responses:
+        '201':
+          description: Анализ загружен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  testId:
+                    type: string
+                    format: uuid
+
+  /lab-tests/my:
+    get:
+      tags: [Lab Tests]
+      summary: Получить мои анализы
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список анализов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tests:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LabTest'
+
+  /lab-tests/{id}:
+    get:
+      tags: [Lab Tests]
+      summary: Получить детали анализа
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Детали
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabTest'
+
+  /lab-tests/interpretation/{id}:
+    get:
+      tags: [Lab Tests]
+      summary: Получить интерпретацию анализа
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Интерпретация
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  test:
+                    $ref: '#/components/schemas/LabTest'
+                  interpretations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LabInterpretation'
+
+  /lab-tests/parameters:
+    get:
+      tags: [Lab Tests]
+      summary: Получить справочник показателей
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Справочник
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  parameters:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LabParameter'
+
+  # ============= COURSES =============
+  /courses:
+    get:
+      tags: [Courses]
+      summary: Получить список курсов
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [all, free, paid]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Список курсов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  courses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Course'
+                  total:
+                    type: integer
+
+  /courses/{id}:
+    get:
+      tags: [Courses]
+      summary: Получить курс
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Курс
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  course:
+                    $ref: '#/components/schemas/Course'
+                  lessons:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Lesson'
+
+  /courses/{id}/progress:
+    get:
+      tags: [Courses]
+      summary: Получить прогресс по курсу
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Прогресс
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  completedLessons:
+                    type: integer
+                  totalLessons:
+                    type: integer
+                  progress:
+                    type: number
+                    description: Процент завершения
+                    example: 75.5
+
+  /lessons/{id}:
+    get:
+      tags: [Courses]
+      summary: Получить урок
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Урок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+
+  /lessons/{id}/complete:
+    post:
+      tags: [Courses]
+      summary: Отметить урок как просмотренный
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Урок отмечен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  progress:
+                    type: number
+
+  # ============= BLOG =============
+  /blog/articles:
+    get:
+      tags: [Blog]
+      summary: Получить список статей
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Статьи
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  articles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Article'
+                  total:
+                    type: integer
+
+  /blog/articles/{id}:
+    get:
+      tags: [Blog]
+      summary: Получить статью
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Статья
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+
+  # ============= NOTIFICATIONS =============
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Получить уведомления
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: unreadOnly
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Уведомления
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+
+  /notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Отметить уведомление прочитанным
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Отмечено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /notifications/{id}:
+    delete:
+      tags: [Notifications]
+      summary: Удалить уведомление
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Удалено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ============= SUBSCRIPTIONS =============
+  /subscriptions/plans:
+    get:
+      tags: [Subscriptions]
+      summary: Получить тарифы
+      responses:
+        '200':
+          description: Тарифы
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plans:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SubscriptionPlan'
+
+  /subscriptions/subscribe:
+    post:
+      tags: [Subscriptions]
+      summary: Оформить подписку
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [planId, paymentMethod]
+              properties:
+                planId:
+                  type: string
+                  format: uuid
+                paymentMethod:
+                  type: string
+                  enum: [stripe, apple, google]
+                paymentToken:
+                  type: string
+      responses:
+        '200':
+          description: Подписка оформлена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subscriptionId:
+                    type: string
+                    format: uuid
+                  paymentUrl:
+                    type: string
+                    description: URL для завершения оплаты (если нужно)
+
+  /subscriptions/my:
+    get:
+      tags: [Subscriptions]
+      summary: Получить мою подписку
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Подписка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+
+  /subscriptions/cancel:
+    post:
+      tags: [Subscriptions]
+      summary: Отменить подписку
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Отменено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ============= ADMIN ENDPOINTS =============
+  # Эти endpoints используются только Admin Web Panel (Next.js)
+  # Требуют admin JWT токен
+  
+  /admin/stats:
+    get:
+      tags: [Admin, Analytics]
+      summary: Получить статистику для dashboard
+      description: |
+        Возвращает общую статистику системы для отображения в админ-панели.
+        Используется на главной странице Admin Web Panel.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Статистика
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStats'
+
+  /admin/users:
+    get:
+      tags: [Admin, Users]
+      summary: Получить список пользователей (для админки)
+      description: |
+        Расширенный список пользователей с доп. информацией для админ-панели:
+        - Статус подписки
+        - Дата последней активности
+        - Сумма всех платежей
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, blocked, pending]
+        - name: subscriptionStatus
+          in: query
+          schema:
+            type: string
+            enum: [active, expired, cancelled, trial]
+      responses:
+        '200':
+          description: Список пользователей
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminUser'
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+
+  /admin/users/{id}/block:
+    post:
+      tags: [Admin, Users]
+      summary: Заблокировать пользователя
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Заблокирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /admin/users/{id}/unblock:
+    post:
+      tags: [Admin, Users]
+      summary: Разблокировать пользователя
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Разблокирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /admin/recipes/count:
+    get:
+      tags: [Admin, Recipes]
+      summary: Получить количество рецептов
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Количество
+          content:
+            application/json:
+              schema:
+                type: integer
+
+  /admin/courses/count:
+    get:
+      tags: [Admin, Courses]
+      summary: Получить количество курсов
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Количество
+          content:
+            application/json:
+              schema:
+                type: integer
+
+  /admin/meal-plans/count:
+    get:
+      tags: [Admin, Meal Plans]
+      summary: Получить количество планов питания
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Количество
+          content:
+            application/json:
+              schema:
+                type: integer
+
+  /admin/subscriptions/count:
+    get:
+      tags: [Admin, Subscriptions]
+      summary: Получить количество подписок с фильтрами
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: filters[status][$eq]
+          in: query
+          schema:
+            type: string
+            enum: [active, cancelled, expired]
+      responses:
+        '200':
+          description: Количество
+          content:
+            application/json:
+              schema:
+                type: integer
+
+# ============= COMPONENTS =============
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        details:
+          type: object
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [male, female, other]
+        goal:
+          type: string
+          enum: [weight_loss, weight_gain, maintenance, health]
+        avatarUrl:
+          type: string
+        emailVerified:
+          type: boolean
+        phoneVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        isNewUser:
+          type: boolean
+        token:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    Dashboard:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            name:
+              type: string
+            avatar:
+              type: string
+        currentPlan:
+          type: object
+          properties:
+            name:
+              type: string
+            progress:
+              type: number
+        tools:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              icon:
+                type: string
+              route:
+                type: string
+        blog:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              title:
+                type: string
+              preview:
+                type: string
+              imageUrl:
+                type: string
+        subscription:
+          type: object
+          properties:
+            status:
+              type: string
+            nextBilling:
+              type: string
+              format: date
+        unreadNotifications:
+          type: integer
+
+    MealPlan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+        startDate:
+          type: string
+          format: date
+        meals:
+          type: array
+          items:
+            $ref: '#/components/schemas/MealSlot'
+
+    MealSlot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [wakeup, breakfast, snack, lunch, dinner, sleep]
+        time:
+          type: string
+          example: "08:00"
+        recipe:
+          $ref: '#/components/schemas/Recipe'
+        portion:
+          type: integer
+          description: Граммы
+        calories:
+          type: integer
+        importance:
+          type: string
+          description: Описание важности приема пищи
+
+    Recipe:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+        prepTime:
+          type: integer
+          description: Минуты
+        calories:
+          type: integer
+        protein:
+          type: number
+        carbs:
+          type: number
+        fats:
+          type: number
+        instructions:
+          type: array
+          items:
+            type: string
+        ingredients:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              amount:
+                type: number
+              unit:
+                type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    DiaryDay:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        meals:
+          type: array
+          items:
+            $ref: '#/components/schemas/MealEntry'
+        waterLog:
+          $ref: '#/components/schemas/WaterLog'
+        moodRating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        isCompleted:
+          type: boolean
+
+    MealEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        mealName:
+          type: string
+        mealType:
+          type: string
+          enum: [breakfast, lunch, dinner, snack]
+        consumedAt:
+          type: string
+          format: date-time
+        portionGrams:
+          type: integer
+        calories:
+          type: integer
+        photoUrl:
+          type: string
+        fromPlan:
+          type: boolean
+        recipeId:
+          type: string
+          format: uuid
+
+    WaterLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        totalAmount:
+          type: integer
+          description: Миллилитры
+        goal:
+          type: integer
+          description: Целевое количество мл
+
+    AIChat:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AIMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    LabTest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        testType:
+          type: string
+        testDate:
+          type: string
+          format: date
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              parameterId:
+                type: string
+              value:
+                type: number
+              unit:
+                type: string
+
+    LabParameter:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "HGB"
+        name:
+          type: string
+          example: "Гемоглобин"
+        category:
+          type: string
+          example: "Клинический анализ крови"
+        units:
+          type: array
+          items:
+            type: string
+        referenceRanges:
+          type: array
+          items:
+            type: object
+            properties:
+              gender:
+                type: string
+              ageMin:
+                type: integer
+              ageMax:
+                type: integer
+              min:
+                type: number
+              max:
+                type: number
+              unit:
+                type: string
+
+    LabInterpretation:
+      type: object
+      properties:
+        parameterId:
+          type: string
+        parameterName:
+          type: string
+        userValue:
+          type: number
+        referenceRange:
+          type: object
+          properties:
+            min:
+              type: number
+            max:
+              type: number
+            unit:
+              type: string
+        status:
+          type: string
+          enum: [normal, low, high]
+        description:
+          type: string
+        causes:
+          type: object
+          properties:
+            low:
+              type: array
+              items:
+                type: string
+            high:
+              type: array
+              items:
+                type: string
+        recommendations:
+          type: string
+
+    Course:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+        author:
+          type: string
+        isPaid:
+          type: boolean
+        price:
+          type: number
+        duration:
+          type: string
+        category:
+          type: string
+        lessonsCount:
+          type: integer
+
+    Lesson:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        courseId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        order:
+          type: integer
+        type:
+          type: string
+          enum: [video, text, audio]
+        content:
+          type: string
+          description: URL для видео/аудио, Markdown для текста
+        duration:
+          type: integer
+          description: Минуты
+        materials:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              url:
+                type: string
+        isCompleted:
+          type: boolean
+
+    Article:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        slug:
+          type: string
+        content:
+          type: string
+          description: Markdown
+        preview:
+          type: string
+        imageUrl:
+          type: string
+        author:
+          type: string
+        category:
+          type: string
+        publishedAt:
+          type: string
+          format: date-time
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [info, reminder, alert]
+        isRead:
+          type: boolean
+        action:
+          type: object
+          properties:
+            type:
+              type: string
+            target:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    SubscriptionPlan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        interval:
+          type: string
+          enum: [month, year]
+        features:
+          type: array
+          items:
+            type: string
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        planName:
+          type: string
+        status:
+          type: string
+          enum: [active, cancelled, expired]
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        nextBillingDate:
+          type: string
+          format: date
+        paymentProvider:
+          type: string
+
+    # ============= ADMIN SCHEMAS =============
+    
+    AdminStats:
+      type: object
+      description: Статистика для админ-панели dashboard
+      properties:
+        totalUsers:
+          type: number
+          description: Всего пользователей
+        totalRecipes:
+          type: number
+          description: Всего рецептов
+        totalMealPlans:
+          type: number
+          description: Всего планов питания
+        totalCourses:
+          type: number
+          description: Всего курсов
+        activeSubscriptions:
+          type: number
+          description: Активных подписок
+        totalRevenue:
+          type: number
+          description: Общая выручка (руб)
+        newUsersThisMonth:
+          type: number
+          description: Новых пользователей за месяц
+        activeUsersToday:
+          type: number
+          description: Активных пользователей сегодня
+
+    AdminUser:
+      type: object
+      description: Расширенная информация о пользователе для админки
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        status:
+          type: string
+          enum: [active, blocked, pending]
+        subscriptionStatus:
+          type: string
+          enum: [active, expired, cancelled, trial]
+        registeredAt:
+          type: string
+          format: date-time
+        lastActiveAt:
+          type: string
+          format: date-time
+        totalSpent:
+          type: number
+          description: Общая сумма платежей (руб)
+        goals:
+          type: array
+          items:
+            type: string
+
