@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile/features/meal_plan/meal_plan.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -14,34 +12,12 @@ class MealPlanScreen extends StatefulWidget {
 
 class _MealPlanScreenState extends State<MealPlanScreen> {
   DateTime _selectedDate = DateTime.now();
-  DateTime _selectedWeekStart = DateTime.now();
   bool _showMealList = false;
-  
-  @override
-  void initState() {
-    super.initState();
-    _selectedWeekStart = _getWeekStart(DateTime.now());
-  }
-
-  DateTime _getWeekStart(DateTime date) {
-    return date.subtract(Duration(days: date.weekday - 1));
-  }
+  bool _isMonthView = false; // переключатель неделя/месяц
 
   void _selectDate(DateTime date) {
     setState(() {
       _selectedDate = date;
-    });
-  }
-
-  void _previousWeek() {
-    setState(() {
-      _selectedWeekStart = _selectedWeekStart.subtract(const Duration(days: 7));
-    });
-  }
-
-  void _nextWeek() {
-    setState(() {
-      _selectedWeekStart = _selectedWeekStart.add(const Duration(days: 7));
     });
   }
 
@@ -51,6 +27,15 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     });
   }
 
+  // Форматирование даты с месяцем в родительном падеже
+  String _formatDateWithGenitive(DateTime date) {
+    const monthsGenitive = [
+      'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+    ];
+    return '${date.day} ${monthsGenitive[date.month - 1]}';
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_showMealList) {
@@ -58,7 +43,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     }
     
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -148,71 +133,74 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
   Widget _buildBlogCard() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
+      height: 120,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: InkWell(
         onTap: () {},
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: Row(
           children: [
-            // Image
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                bottomLeft: Radius.circular(20),
-              ),
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  image: const DecorationImage(
-                    image: AssetImage('assets/placeholders/blog_food_1.jpg'),
-                    fit: BoxFit.cover,
+            // ФОТО СЛЕВА - 170x153 с отступом 5px, borderRadius 28
+            Padding(
+              padding: const EdgeInsets.all(5),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Container(
+                  width: 170,
+                  height: 153,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
                   ),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.restaurant,
-                    size: 40,
-                    color: Colors.grey[400],
+                  child: Image.asset(
+                    'assets/images/blog_food_2.jpg',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Center(
+                        child: Icon(
+                          Icons.restaurant,
+                          size: 60,
+                          color: Colors.grey[400],
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
             ),
             
-            // Content
+            // ТЕКСТ СПРАВА
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(8, 12, 12, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Дата: ${DateFormat('dd.MM.yy').format(DateTime.now())}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
+                          'Дата ${DateFormat('dd.MM.yy').format(DateTime.now())}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF8E8E93),
                           ),
                         ),
-                        Text(
-                          '234 калл',
+                        const Text(
+                          '234 ккал',
                           style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
+                            fontSize: 11,
+                            color: Color(0xFF8E8E93),
                           ),
                         ),
                       ],
@@ -223,23 +211,11 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: const BoxDecoration(
                         color: Colors.black,
-                        shape: BoxShape.circle,
+                        height: 1.3,
                       ),
-                      child: const Icon(
-                        Icons.arrow_forward,
-                        color: Colors.white,
-                        size: 16,
-                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -254,28 +230,45 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
   Widget _buildDiaryButton() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
+      height: 56,
       child: ElevatedButton(
         onPressed: () {},
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFE9FFA6),
           foregroundColor: Colors.black,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          padding: const EdgeInsets.fromLTRB(16, 8, 12, 8),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(20),
           ),
           elevation: 0,
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            Text(
-              'Перейти в дневник питания',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+          children: [
+            const Expanded(
+              child: Text(
+                'Перейти в дневник питания',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.41,
+                ),
               ),
             ),
-            Icon(Icons.arrow_forward, size: 20),
+            const SizedBox(width: 10),
+            // Круглый чёрный фон для стрелки
+            Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: Colors.black,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
           ],
         ),
       ),
@@ -283,188 +276,445 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
   }
 
   Widget _buildCalendar() {
-    final weekEnd = _selectedWeekStart.add(const Duration(days: 6));
-    final monthName = DateFormat('MMMM', 'ru').format(_selectedWeekStart);
+    final now = DateTime.now();
+    
+    // Начало и конец недели для недельного вида - от _selectedDate!
+    final weekStart = _selectedDate.subtract(Duration(days: _selectedDate.weekday - 1));
+    final weekEnd = weekStart.add(const Duration(days: 6));
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${_selectedWeekStart.day} $monthName',
+          // Заголовок с датами и навигацией
+          if (!_isMonthView)
+            // РЕЖИМ НЕДЕЛИ
+            Row(
+              children: [
+                // Стрелка влево
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = _selectedDate.subtract(const Duration(days: 7));
+                    });
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Transform.rotate(
+                      angle: 3.14159,
+                      child: const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 20,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(width: 8),
+                
+                // ДАТА НАЧАЛА недели - СЛЕВА
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Color(0xFFE9FFA6),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      _formatDateWithGenitive(weekStart),
+                      textAlign: TextAlign.left,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(width: 8),
+                
+                // ДАТА КОНЦА недели - СЛЕВА (не справа!)
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Color(0xFFE9FFA6),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      _formatDateWithGenitive(weekEnd),
+                      textAlign: TextAlign.left,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(width: 8),
+                
+                // Стрелка вправо
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = _selectedDate.add(const Duration(days: 7));
+                    });
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 20,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(width: 8),
+                
+                // Иконка календаря
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isMonthView = !_isMonthView;
+                    });
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 20,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            // РЕЖИМ МЕСЯЦА
+            Row(
+              children: [
+                // Стрелка влево
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = _selectedDate.subtract(const Duration(days: 30));
+                    });
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Transform.rotate(
+                      angle: 3.14159,
+                      child: const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 20,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+                
+                Expanded(
+                  child: Text(
+                    DateFormat('MMMM yyyy', 'ru').format(_selectedDate),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                
+                // Стрелка вправо
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = _selectedDate.add(const Duration(days: 30));
+                    });
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 20,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(width: 8),
+                
+                // Иконка календаря для возврата
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isMonthView = false;
+                    });
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE9FFA6),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 20,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          
+          const SizedBox(height: 16),
+          
+          // Дни недели
+          if (_isMonthView)
+            _buildMonthView()
+          else
+            _buildWeekView(),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildWeekView() {
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+    final today = DateTime(now.year, now.month, now.day);
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: List.generate(7, (index) {
+        final date = weekStart.add(Duration(days: index));
+        final dateOnly = DateTime(date.year, date.month, date.day);
+        final isToday = dateOnly == today;
+        final isPast = dateOnly.isBefore(today);
+        
+        return GestureDetector(
+          onTap: () => _selectDate(date),
+          child: Container(
+            width: isToday ? 47 : 45,
+            height: 60,
+            decoration: BoxDecoration(
+              color: isToday 
+                  ? const Color(0xFFE9FFA6)  // Сегодня - зелёный фон
+                  : Colors.white,  // Будущие дни - белый фон
+              borderRadius: BorderRadius.circular(26),
+              border: isPast 
+                  ? Border.all(color: const Color(0xFFE9FFA6), width: 1)  // Прошедшие - зелёная рамка
+                  : null,  // Будущие - без рамки
+            ),
+            child: Center(
+              child: Text(
+                DateFormat('d').format(date),
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: _previousWeek,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  const SizedBox(width: 16),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: _nextWeek,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.calendar_today, size: 20),
-                    onPressed: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedDate,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                        locale: const Locale('ru'),
-                      );
-                      if (date != null) {
-                        setState(() {
-                          _selectedDate = date;
-                          _selectedWeekStart = _getWeekStart(date);
-                        });
-                      }
-                    },
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 16),
-          Row(
+        );
+      }),
+    );
+  }
+  
+  Widget _buildMonthView() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
+    
+    // Начинаем с понедельника недели, в которую попадает 1-е число
+    final startDate = firstDayOfMonth.subtract(Duration(days: firstDayOfMonth.weekday - 1));
+    
+    // Количество недель для отображения
+    final daysToShow = ((lastDayOfMonth.difference(startDate).inDays + 1) / 7).ceil() * 7;
+    
+    return Column(
+      children: List.generate((daysToShow / 7).ceil(), (weekIndex) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(7, (index) {
-              final date = _selectedWeekStart.add(Duration(days: index));
-              final isSelected = DateFormat('yyyy-MM-dd').format(date) ==
-                  DateFormat('yyyy-MM-dd').format(_selectedDate);
-              final dayNumber = date.day;
+            children: List.generate(7, (dayIndex) {
+              final date = startDate.add(Duration(days: weekIndex * 7 + dayIndex));
+              final dateOnly = DateTime(date.year, date.month, date.day);
+              final isCurrentMonth = date.month == now.month;
+              final isToday = dateOnly == today;
+              final isPast = dateOnly.isBefore(today);
+              
+              if (!isCurrentMonth) {
+                return const SizedBox(width: 45, height: 60);
+              }
               
               return GestureDetector(
                 onTap: () => _selectDate(date),
                 child: Container(
-                  width: 44,
-                  height: 64,
+                  width: isToday ? 47 : 45,
+                  height: 60,
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFE9FFA6) : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected ? const Color(0xFFE9FFA6) : const Color(0xFFE0E0E0),
-                    ),
+                    color: isToday 
+                        ? const Color(0xFFE9FFA6)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(26),
+                    border: isPast 
+                        ? Border.all(color: const Color(0xFFE9FFA6), width: 1)
+                        : null,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        dayNumber.toString(),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.black : Colors.black87,
-                        ),
+                  child: Center(
+                    child: Text(
+                      DateFormat('d').format(date),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
                       ),
-                    ],
+                    ),
                   ),
                 ),
               );
             }),
           ),
-        ],
-      ),
+        );
+      }),
     );
   }
+
 
   Widget _buildCoursesCard() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      height: 180,
+      width: 357,
+      height: 171,
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF5E1),
-        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFFFCE6CF),
+        borderRadius: BorderRadius.circular(23),
       ),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            // Image on the right
-            Positioned(
-              right: 0,
-              bottom: 0,
-              top: 0,
-              width: 140,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
+      child: Stack(
+        children: [
+          // Фоновая картинка (плейсхолдер пока)
+          Positioned(
+            right: 0,
+            bottom: 0,
+            top: 0,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(23),
+                bottomRight: Radius.circular(23),
+              ),
+              child: Image.asset(
+                'assets/images/courses_bg.jpg',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 180,
+                    color: Colors.transparent,
+                  );
+                },
+              ),
+            ),
+          ),
+          
+          // Контент
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 20, 14, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Заголовок
+                const Text(
+                  'Курсы\nи обучения',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    height: 1.2,
+                  ),
                 ),
-                child: Container(
-                  color: Colors.grey[200],
-                  child: Center(
-                    child: Icon(
-                      Icons.person,
-                      size: 60,
-                      color: Colors.grey[400],
+                
+                // Кнопка "Смотреть" - смещена вправо
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    onTap: () {
+                      // TODO: Navigate to courses screen
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Смотреть',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF818181),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: const BoxDecoration(
+                            color: Colors.black,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-            
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Курсы\nи обучения',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      height: 1.2,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      const Text(
-                        'Смотреть',
-                        style: TextStyle(
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: const BoxDecoration(
-                          color: Colors.black,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.arrow_forward,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -472,7 +722,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
   // Meal List View (второй экран)
   Widget _buildMealListView() {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [

@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/dev_modules/core_module/services/token_manager.dart';
+import 'package:mobile/features/meal_plan/screens/meal_plan_screen.dart';
+import 'package:mobile/features/diary/screens/diary_screen.dart';
+import 'package:mobile/features/knowledge_base/screens/knowledge_base_screen.dart';
+import 'package:mobile/features/lab_tests/screens/lab_tests_screen.dart';
+import 'package:mobile/features/ai_chat/screens/ai_chat_screen.dart';
+import 'package:mobile/features/profile/profile_screen.dart';
+import 'package:mobile/features/notifications/notifications_screen.dart';
 
 /// Главный экран приложения Brix Nutrition
 /// Дизайн воссоздан пиксель-в-пиксель согласно макету
@@ -137,20 +144,33 @@ class _HomeScreenState extends State<HomeScreen> {
         // Notifications Icon
         IconButton(
           icon: const Icon(Icons.notifications_outlined, size: 28),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+            );
+          },
           padding: EdgeInsets.zero,
         ),
         const SizedBox(width: 8),
         // User Avatar
-        CircleAvatar(
-          radius: 20,
-          backgroundColor: BrixHomeColors.green,
-          child: Text(
-            _userName?.substring(0, 1).toUpperCase() ?? 'U',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: BrixHomeColors.textPrimary,
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+            );
+          },
+          child: CircleAvatar(
+            radius: 20,
+            backgroundColor: BrixHomeColors.green,
+            child: Text(
+              _userName?.substring(0, 1).toUpperCase() ?? 'U',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: BrixHomeColors.textPrimary,
+              ),
             ),
           ),
         ),
@@ -190,7 +210,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Карточка "Питьевой режим" с изображением девушки
   Widget _buildWaterCard() {
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const DiaryScreen()),
+        );
+      },
+      child: Container(
       width: 278,
       height: 256,
       decoration: BoxDecoration(
@@ -297,12 +324,20 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 
   // Карточка "План питания на неделю"
   Widget _buildMealPlanCard() {
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MealPlanScreen()),
+        );
+      },
+      child: Container(
       width: 278,
       height: 256,
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
@@ -396,6 +431,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -434,38 +470,46 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Карточка "План питания на неделю" (отдельная)
   Widget _buildWeeklyPlanCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: BrixHomeColors.background,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFD7D7D7), width: 0.5),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'План питания на неделю',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: BrixHomeColors.textPrimary,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MealPlanScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: BrixHomeColors.background,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFD7D7D7), width: 0.5),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'План питания на неделю',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: BrixHomeColors.textPrimary,
+              ),
             ),
-          ),
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              color: BrixHomeColors.green,
-              shape: BoxShape.circle,
+            Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: BrixHomeColors.green,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_forward,
+                color: BrixHomeColors.black,
+                size: 20,
+              ),
             ),
-            child: const Icon(
-              Icons.arrow_forward,
-              color: BrixHomeColors.black,
-              size: 20,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -481,7 +525,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 buttonText: 'Перейти',
                 backgroundColor: BrixHomeColors.green,
                 buttonColor: BrixHomeColors.black,
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const DiaryScreen()),
+                  );
+                },
               ),
             const SizedBox(width: 12),
               _buildToolCard(
@@ -489,7 +538,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 buttonText: 'Смотреть',
                 backgroundColor: BrixHomeColors.pink,
                 buttonColor: BrixHomeColors.black,
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const KnowledgeBaseScreen()),
+                  );
+                },
               ),
           ],
         ),
@@ -502,7 +556,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 backgroundColor: BrixHomeColors.background,
                 buttonColor: BrixHomeColors.green,
                 borderColor: const Color(0xFFCBE67B),
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LabTestsScreen()),
+                  );
+                },
               ),
             const SizedBox(width: 12),
               _buildToolCard(
@@ -511,7 +570,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 backgroundColor: BrixHomeColors.background,
                 buttonColor: BrixHomeColors.pink,
                 borderColor: const Color(0xFFFCCFE9),
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AiChatScreen()),
+                  );
+                },
                       ),
                   ],
         ),
@@ -668,7 +732,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: () {
+            // TODO: Navigate to blog/news screen when implemented
+          },
           style: TextButton.styleFrom(
             padding: EdgeInsets.zero,
             minimumSize: const Size(0, 0),
@@ -678,7 +744,7 @@ class _HomeScreenState extends State<HomeScreen> {
             'Показать всё',
             style: TextStyle(
               fontSize: 14,
-              color: BrixHomeColors.textSecondary,
+              color: BrixHomeColors.textPrimary,
             ),
           ),
         ),
