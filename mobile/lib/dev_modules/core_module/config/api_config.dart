@@ -10,7 +10,7 @@ class ApiConfig {
   /// 
   /// Для продакшена измените на:
   /// - 'https://api.brix-nutrition.com/api'
-  static const String baseUrl = 'http://10.0.2.2:3002/api';
+  static const String baseUrl = 'http://10.0.2.2:3000/api';
   
   /// Timeout для подключения (в секундах)
   static const int connectTimeout = 10;

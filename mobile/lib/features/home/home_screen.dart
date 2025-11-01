@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/dev_modules/core_module/services/token_manager.dart';
-import 'dart:io';
 
 /// Главный экран приложения Brix Nutrition
 /// Дизайн воссоздан пиксель-в-пиксель согласно макету
@@ -194,7 +193,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       width: 278,
       height: 256,
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
       decoration: BoxDecoration(
         color: BrixHomeColors.green,
         borderRadius: BorderRadius.circular(20),
@@ -208,77 +206,94 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Stack(
         children: [
-          // Изображение девушки в правом нижнем углу без отступов
+          // Изображение девушки в правом нижнем углу БЕЗ отступов
           Positioned(
             right: 0,
             bottom: 0,
-            width: 180,
-            height: 180,
+            width: 220,
+            height: 220,
             child: ClipRRect(
               borderRadius: const BorderRadius.only(
                 bottomRight: Radius.circular(20),
               ),
               child: Opacity(
                 opacity: 0.9,
-                child: _buildImagePlaceholder('hero_girl.jpg'),
+                child: _buildImagePlaceholder('hero_girl.png'),
               ),
             ),
           ),
-          // Контент поверх изображения
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Питьевой\nрежим',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: BrixHomeColors.textPrimary,
-                      height: 1.2,
+          // Контент поверх изображения с padding
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Питьевой\nрежим',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: BrixHomeColors.textPrimary,
+                        height: 1.2,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Соблюдай режим\nи делай своё\nтело лучше!',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: BrixHomeColors.textPrimary,
-                      height: 1.3,
+                    SizedBox(height: 8),
+                    Text(
+                      'Соблюдай режим\nи делай своё\nтело лучше!',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: BrixHomeColors.textPrimary,
+                        height: 1.3,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    '26%',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: BrixHomeColors.textPrimary,
+                  ],
+                ),
+                // Прогресс, процент и кнопка
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          '0%',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: BrixHomeColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 69,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: BrixHomeColors.textPrimary.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                      color: BrixHomeColors.black,
-                      shape: BoxShape.circle,
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: BrixHomeColors.black,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward,
+                        color: BrixHomeColors.white,
+                        size: 22,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.arrow_forward,
-                      color: BrixHomeColors.white,
-                      size: 22,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -329,41 +344,52 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Прогресс, процент и кнопка
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
                     '0%',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: BrixHomeColors.textPrimary,
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                      color: BrixHomeColors.black,
-                      shape: BoxShape.circle,
+                    width: 69,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: BrixHomeColors.textPrimary.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    child: const Icon(
-                      Icons.arrow_forward,
-                      color: BrixHomeColors.white,
-                      size: 22,
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: 0.0, // 0%
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFCBE67B),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
               Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  color: BrixHomeColors.textPrimary.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(3),
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: BrixHomeColors.black,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.arrow_forward,
+                  color: BrixHomeColors.white,
+                  size: 22,
                 ),
               ),
             ],
@@ -380,7 +406,7 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: BrixHomeColors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: BrixHomeColors.textSecondary.withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFFCBE67B), width: 0.5),
       ),
       child: Center(
         child: RichText(
@@ -411,44 +437,27 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: BrixHomeColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: BrixHomeColors.background,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFD7D7D7), width: 0.5),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: BrixHomeColors.background,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.calendar_today_outlined, size: 24),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'План питания на неделю',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: BrixHomeColors.textPrimary,
-              ),
+          const Text(
+            'План питания на неделю',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: BrixHomeColors.textPrimary,
             ),
           ),
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: BrixHomeColors.green,
-              borderRadius: BorderRadius.circular(10),
+              shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.arrow_forward,
@@ -490,16 +499,18 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildToolCard(
                 title: 'Расшифровка\nанализов',
                 buttonText: 'Смотреть',
-                backgroundColor: BrixHomeColors.white,
+                backgroundColor: BrixHomeColors.background,
                 buttonColor: BrixHomeColors.green,
+                borderColor: const Color(0xFFCBE67B),
                 onTap: () {},
               ),
             const SizedBox(width: 12),
               _buildToolCard(
                 title: 'AI консультант',
                 buttonText: 'Узнать всё',
-                backgroundColor: BrixHomeColors.white,
+                backgroundColor: BrixHomeColors.background,
                 buttonColor: BrixHomeColors.pink,
+                borderColor: const Color(0xFFFCCFE9),
                 onTap: () {},
                       ),
                   ],
@@ -515,6 +526,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color backgroundColor,
     required Color buttonColor,
     required VoidCallback onTap,
+    Color? borderColor,
   }) {
     return Container(
       width: 175,
@@ -523,15 +535,7 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: backgroundColor == BrixHomeColors.white
-            ? [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
+        border: borderColor != null ? Border.all(color: borderColor, width: 0.5) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,7 +565,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 32,
                 decoration: BoxDecoration(
                   color: buttonColor,
-                  borderRadius: BorderRadius.circular(8),
+                  shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.arrow_forward,
@@ -635,9 +639,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: BrixHomeColors.green,
-              borderRadius: BorderRadius.circular(10),
+              shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.arrow_forward,
@@ -684,26 +688,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Карточки блога
   Widget _buildBlogCards() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildBlogCard(
+    return SizedBox(
+      height: 310,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          _buildBlogCard(
             imageName: 'blog_food_1.jpg',
             date: '23.04.25',
             calories: '254 ккал',
             title: 'Как начать следить за питанием и сделать это привычкой',
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildBlogCard(
+          const SizedBox(width: 12),
+          _buildBlogCard(
             imageName: 'blog_food_2.jpg',
             date: '23.04.25',
             calories: null,
             title: 'Как восстановить микрофлору кишечника?',
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -715,6 +719,8 @@ class _HomeScreenState extends State<HomeScreen> {
     required String title,
   }) {
     return Container(
+      width: 224,
+      height: 310,
       decoration: BoxDecoration(
         color: BrixHomeColors.white,
         borderRadius: BorderRadius.circular(16),
@@ -729,17 +735,21 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image placeholder
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: _buildImagePlaceholder(imageName, height: 120),
+          // Image placeholder с отступом 5px от краев
+          Padding(
+            padding: const EdgeInsets.all(5),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: _buildImagePlaceholder(imageName, height: 180),
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Дата $date',
@@ -748,23 +758,21 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: BrixHomeColors.textSecondary,
                       ),
                     ),
-                    if (calories != null) ...[
-                      const SizedBox(width: 8),
-                Text(
+                    if (calories != null)
+                      Text(
                         calories,
                         style: const TextStyle(
                           fontSize: 11,
                           color: BrixHomeColors.textSecondary,
                         ),
                       ),
-                    ],
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: BrixHomeColors.textPrimary,
                     height: 1.3,
@@ -782,17 +790,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Плейсхолдер для изображений
   Widget _buildImagePlaceholder(String imageName, {double? height}) {
-    final placeholderPath = 'assets/placeholders/$imageName';
+    final placeholderPath = 'assets/images/$imageName';
     
-    return Container(
+    return SizedBox(
       height: height,
-      color: BrixHomeColors.background,
-      child: File(placeholderPath).existsSync()
-          ? Image.file(
-              File(placeholderPath),
-              fit: BoxFit.cover,
-            )
-          : Center(
+      width: double.infinity,
+      child: Image.asset(
+        placeholderPath,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: BrixHomeColors.background,
+            child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -812,6 +821,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
+            ),
+          );
+        },
       ),
     );
   }
